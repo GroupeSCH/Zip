@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendrier Disponibilités</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <style>
+    #calendar {
+      max-width: 900px;
+      margin: 40px auto;
+    }
+    button {
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Calendrier des disponibilités</h2>
+  <div id="calendar"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'fr',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        events: [], // On mettra les données après le fetch
+        eventContent: function (info) {
+          const container = document.createElement('div');
+          container.style.background = 'white';
+          container.style.borderRadius = '4px';
+          container.style.fontSize = '11px';
+          container.style.display = 'flex';
+          container.style.justifyContent = 'space-between';
+          container.style.alignItems = 'center';
+          container.style.padding = '2px 4px';
+
+          const text = document.createElement('span');
+          text.textContent = 'Disponible';
+
+          const btn = document.createElement('button');
+          btn.textContent = 'Réserver';
+          btn.onclick = () => alert('Réservation pour le ' + info.event.startStr);
+
+          container.appendChild(text);
+          container.appendChild(btn);
+
+          return { domNodes: [container] };
+        }
+      });
+
+      calendar.render();
+
+      // Récupère les données depuis Apps Script
+      fetch('https://script.google.com/macros/s/AKfycbzb9Yy4c-uJTEsoD9NlFGpnTwX7QnI4t6azDTD5C4v2XnUQMNJ0f9IVsQHmbYrYTpSu/exec?date=2025-07-01')
+        .then(response => response.json())
+        .then(events => {
+          console.log('Événements reçus :', events);
+          calendar.addEventSource(events);
+        })
+        .catch(error => console.error('Erreur lors du fetch :', error));
+    });
+  </script>
+</body>
+</html>
