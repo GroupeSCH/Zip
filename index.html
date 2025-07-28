@@ -6,53 +6,43 @@
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
     #calendar {
       max-width: 900px;
       margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* Bouton style */
     button {
       background-color: #0d6efd;
       color: white;
       border: none;
       border-radius: 4px;
-      padding: 6px 10px;
-      font-size: 13px;
+      padding: 8px 12px;
+      font-size: 14px;
       cursor: pointer;
+      transition: background 0.2s ease-in-out;
     }
 
-    /* Personnalisation calendrier */
+    button:hover {
+      background-color: #0b5ed7;
+    }
+
     .fc-daygrid-day {
       background: #f9f9f9;
       border: 1px solid #e5e5e5;
       padding: 0 !important;
-      transition: background 0.3s ease;
     }
 
-    .fc-daygrid-day:hover {
-      background: #265992;
-    }
-
-    .fc-day-today {
-      background: #dff3ff !important;
-      border: 2px solid #0d6efd !important;
-      border-radius: 6px;
-    }
-
-    .fc-day-other {
-      background: #f0f0f0;
-      color: #bbb;
-    }
-
-    .fc-col-header-cell {
-      background: #0d6efd;
-      color: white;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    /* ✅ Ajustement des événements pour centrer le bouton */
     .fc-daygrid-event {
       background: none !important;
       border: none !important;
@@ -63,40 +53,242 @@
       height: 100%;
       margin: 0 !important;
     }
+
+    /* ✅ Modale */
+    #reservation-modale {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modale-content {
+      background: white;
+      padding: 25px;
+      width: 400px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95);}
+      to { opacity: 1; transform: scale(1);}
+    }
+
+    h3 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #333;
+      text-align: center;
+    }
+
+    .form-step {
+      display: none;
+      gap: 1rem;
+    }
+
+    .form-step.active {
+      display: block;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 18px;
+      margin-right: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .form-navigation {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ✅ Bouton Fermer */
+    #close-btn {
+      background-color: #dc3545;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    #close-btn:hover {
+      background-color: #bb2d3b;
+    }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">Calendrier des disponibilités</h2>
   <div id="calendar"></div>
 
+  <!-- ✅ Modale avec formulaire multi-étapes -->
+  <div id="reservation-modale">
+    <div class="modale-content">
+      <h3 id="modale-title">Réserver</h3>
+      <form id="reservation-form">
+
+        <!-- Bouton Fermer (première étape uniquement) -->
+        <button type="button" id="close-btn">Fermer</button>
+
+        <!-- Étape 1 -->
+        <div class="form-step active" id="step-1">
+          <label>Nombre de participants :</label>
+          <select id="participants" required>
+            <option value="">Choisissez...</option>
+          </select>
+          <label>Choisissez un créneau :</label>
+          <select id="slot" required></select>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="form-step" id="step-2">
+          <label>Groupe / Organisation :</label>
+          <input type="text" id="group" required>
+          <label>Nom du contact principal :</label>
+          <input type="text" id="name" required>
+          <label>Courriel :</label>
+          <input type="email" id="email" required>
+          <label>Téléphone :</label>
+          <input type="tel" id="phone" required>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="form-step" id="step-3">
+          <label>Options de paiement :</label>
+          <select id="payment" required>
+            <option value="">Choisissez...</option>
+            <option value="carte">Carte de crédit</option>
+            <option value="lien">Lien de paiement</option>
+            <option value="virement">Virement bancaire</option>
+            <option value="cheque">Chèque</option>
+            <option value="surplace">Paiement sur place</option>
+          </select>
+        </div>
+
+        <!-- Navigation -->
+        <div class="form-navigation">
+          <button type="button" id="prev-btn">Retour</button>
+          <button type="button" id="next-btn">Continuer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    const participantsSelect = document.getElementById('participants');
+    const modale = document.getElementById('reservation-modale');
+    const closeBtn = document.getElementById('close-btn');
+
+    for (let i = 10; i <= 50; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        participantsSelect.appendChild(option);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
+      const steps = document.querySelectorAll('.form-step');
+      const nextBtn = document.getElementById('next-btn');
+      const prevBtn = document.getElementById('prev-btn');
+      const slotSelect = document.getElementById('slot');
+      let currentStep = 0;
+      let currentSlots = {};
+
+      function showStep(index) {
+        steps.forEach((step, i) => step.classList.toggle('active', i === index));
+        prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+        nextBtn.textContent = index === steps.length - 1 ? 'Valider' : 'Continuer';
+      }
+      showStep(currentStep);
+
+      nextBtn.addEventListener('click', () => {
+
+        if (!validateCurrentStep()) return;
+        if (currentStep < steps.length - 1) {
+          currentStep++;
+          showStep(currentStep);
+        } else {
+          const option = document.getElementById('payment').value;
+
+          switch (value) {
+
+            case 'carte' :
+                break;
+            
+            case 'lien' :
+                break;
+            
+            case 'cheque' :
+                break;
+            
+            case 'virement' :
+                break;
+            
+            case 'surplace' :
+                break;
+          }
+          modale.style.display = 'none';
+        }
+      });
+
+      prevBtn.addEventListener('click', () => {
+        if (currentStep > 0) {
+          currentStep--;
+          showStep(currentStep);
+        }
+      });
+
+      // ✅ Bouton fermer
+      closeBtn.addEventListener('click', () => {
+        const form = document.getElementById('reservation-form');
+        modale.style.display = 'none';
+        form.reset(); // ✅ Efface tous les champs du formulaire
+        currentStep = 0; // ✅ Revenir à la première étape
+        showStep(currentStep);
+      });
+
+      function validateCurrentStep() {
+        const currentFields = steps[currentStep].querySelectorAll('input, select');
+        for (let field of currentFields) {
+            if (!field.checkValidity()) {
+            field.reportValidity(); // Affiche le message natif HTML5
+            return false;
+            }
+        }
+        return true;
+      }
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'fr',
         initialView: 'dayGridMonth',
         showNonCurrentDates: false,
         fixedWeekCount: false,
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: ''
-        },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
         events: [],
 
-        // ✅ Bouton centré
         eventContent: function(info) {
           return { html: '<button>Réserver</button>' };
         },
 
         eventClick: function (info) {
-          const slots = info.event.extendedProps.info;
-          let message = `Créneaux disponibles pour le ${info.event.startStr} :\n\n`;
-          Object.keys(slots).forEach(slotName => {
-            message += `${slotName}: ${slots[slotName]}\n`;
+          currentSlots = info.event.extendedProps.info;
+          slotSelect.innerHTML = '';
+          Object.keys(currentSlots).forEach(slotName => {
+            slotSelect.innerHTML += `<option value="${slotName}">${currentSlots[slotName]}</option>`;
           });
-          alert(message);
+          modale.style.display = 'flex';
+          currentStep = 0;
+          showStep(currentStep);
         }
       });
 
@@ -107,8 +299,6 @@
           calendar.render();
         })
         .catch(error => console.error('Erreur lors du fetch :', error));
-
-        calendar.render();
     });
   </script>
 </body>
