@@ -158,34 +158,26 @@
 
   /* ✅ Responsive pour smartphones */
   @media (max-width: 480px) {
-    #calendar {
-      margin: 10px;
-      padding: 5px;
-    }
-
-    .modale-content {
-      width: 95%;
-      font-size: 14px;
-    }
-
-    select, input, button {
-      font-size: 14px;
-      padding: 8px;
-    }
-
-    .fc .fc-toolbar-title {
-      font-size: 16px;
-    }
-
-    .fc .fc-daygrid-day-number {
-      font-size: 12px;
-    }
-
     .fc-button {
-      padding: 5px 8px;
-      font-size: 12px;
+      font-size: 11px !important;
+      padding: 4px 6px !important;
+      min-height: 28px !important;
+      line-height: 1.2 !important;
+      border-radius: 4px !important;
     }
-  }
+
+    /* Réduire aussi la toolbar */
+    .fc .fc-toolbar {
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .fc-toolbar-chunk {
+      display: flex;
+      gap: 4px;
+    }
+}
 
   </style>
 </head>
