@@ -125,6 +125,68 @@
     #close-btn:hover {
       background-color: #bb2d3b;
     }
+
+    /* ✅ Responsive pour tablettes */
+  @media (max-width: 768px) {
+    #calendar {
+      max-width: 100%;
+      margin: 20px;
+      padding: 10px;
+    }
+
+    .modale-content {
+      width: 90%; /* modale plus étroite */
+      padding: 15px;
+    }
+
+    .fc .fc-toolbar {
+      flex-wrap: wrap;
+      font-size: 14px;
+      justify-content: center;
+    }
+
+    .fc .fc-toolbar-title {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .fc-daygrid-day {
+      font-size: 12px;
+      padding: 2px !important;
+    }
+  }
+
+  /* ✅ Responsive pour smartphones */
+  @media (max-width: 480px) {
+    #calendar {
+      margin: 10px;
+      padding: 5px;
+    }
+
+    .modale-content {
+      width: 95%;
+      font-size: 14px;
+    }
+
+    select, input, button {
+      font-size: 14px;
+      padding: 8px;
+    }
+
+    .fc .fc-toolbar-title {
+      font-size: 16px;
+    }
+
+    .fc .fc-daygrid-day-number {
+      font-size: 12px;
+    }
+
+    .fc-button {
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+  }
+
   </style>
 </head>
 <div id="loading-overlay" style="
