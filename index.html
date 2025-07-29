@@ -166,10 +166,7 @@
           <label>Options de paiement :</label>
           <select id="payment" required>
             <option value="">Choisissez...</option>
-            <option value="carte">Carte de crédit</option>
-            <option value="lien">Lien de paiement</option>
-            <option value="virement">Virement bancaire</option>
-            <option value="cheque">Chèque</option>
+            <option value="carte">Paiement en ligne</option>
             <option value="surplace">Paiement sur place</option>
           </select>
         </div>
@@ -187,6 +184,8 @@
     const participantsSelect = document.getElementById('participants');
     const modale = document.getElementById('reservation-modale');
     const closeBtn = document.getElementById('close-btn');
+
+    let customer_data = {};
 
     for (let i = 10; i <= 50; i++) {
         const option = document.createElement('option');
@@ -218,24 +217,21 @@
           currentStep++;
           showStep(currentStep);
         } else {
+          customer_data.name = document.getElementById('name').value.trim();
+          customer_data.email = document.getElementById('email').value.trim();
+          customer_data.phone_number = document.getElementById('phone').value.trim();
+          customer_data.heure = document.getElementById('slot').value.trim();
           const option = document.getElementById('payment').value;
-
-          switch (value) {
-
-            case 'carte' :
-                break;
-            
-            case 'lien' :
-                break;
-            
-            case 'cheque' :
-                break;
-            
-            case 'virement' :
-                break;
-            
-            case 'surplace' :
-                break;
+          console.log('Customer data:', customer_data);
+          if (option === 'carte') {
+            customer_data.status = 'Facture square';
+            createInvoice(customer_data);
+            sendEmail(false, customer_data);
+            sendEmail(true, customer_data);
+          } else {
+            customer_data.status = 'Paiement sur place';
+            sendEmail(false, customer_data);
+            sendEmail(false, customer_data);
           }
           modale.style.display = 'none';
         }
@@ -256,6 +252,10 @@
         currentStep = 0; // ✅ Revenir à la première étape
         showStep(currentStep);
       });
+
+      participantsSelect.addEventListener('change', function() {
+        customer_data.participants = participantsSelect.value;
+      })
 
       function validateCurrentStep() {
         const currentFields = steps[currentStep].querySelectorAll('input, select');
@@ -289,6 +289,10 @@
           modale.style.display = 'flex';
           currentStep = 0;
           showStep(currentStep);
+        },
+
+        dateClick : function(info) {
+          customer_data.date = info.dateStr;
         }
       });
 
@@ -300,6 +304,69 @@
         })
         .catch(error => console.error('Erreur lors du fetch :', error));
     });
+
+    function createInvoice(data) {
+      const url = 'https://script.google.com/macros/s/AKfycbxDRmVdh1W7oBoB81BPgvcNjSPZOZPmBZIXJc5qmI6_gx8WQF3suD_CeoLMgry4Hx1_/exec';
+      
+      const body = {
+        name : data.name,
+        email : data.email,
+        phone_number : data.phone_number
+      };
+      
+      const options = {
+        method : "POST",
+        headers : {
+          'Content-Type' : 'application/json'
+        },
+        body : JSON.stringify(body)
+      };
+
+      fetch(url, options)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${reponse.status}`);
+        }
+        return response.text();
+      })
+      .then(reponseData => {
+        console.log('Success:', reponseData);
+      })
+      .catch(error => {
+        console.log('Error:', error);
+      });
+    }
+
+    function sendEmail(direction, data) {
+      let url = 'https://script.google.com/macros/s/AKfycbyOEoM1efz1YKaY0tMt0y5Nf3vDPkTIYEBXwWBsrksT06MeXp8-OisN7EI05WlaVJGQVA/exec';
+      if (direction) {
+        url += '?action=direction';
+        url += '&status=' + data.status;
+        url += '&phone=' + data.phone_number;
+        url += '&email=' + data.email;
+      } else {
+        url += '?action=confirmationFR';
+        url += '&link=' + data.link;
+      }
+      url += '&prenom=' + data.name;
+      url += '&date=' + data.date;
+      url += '&heure=' + data.heure;
+      url += '&participants=' + data.participants;
+
+      fetch(url)
+        .then(reponse => {
+          if (!reponse.ok) {
+            throw new Error(`HTTP error! status: ${reponse.status}`)
+          }
+          return reponse.text();
+        })
+        .then(reponseData => {
+          console.log('Response data', reponseData);
+        })
+        .catch(error => {
+          console.log('Fetch email error:', error);
+        });
+    }
   </script>
 </body>
 </html>
