@@ -161,6 +161,13 @@
           </select>
           <label>Choisissez un créneau :</label>
           <select id="slot" required></select>
+          <ul style="list-style-type:none;">
+            <li style="margin-bottom: 5px;"><strong>Résumé : </strong><span id="price">22,49</span>$ x <span id="number">0</span> participants</li>
+            <li><strong>Sous-total : </strong><span id="sub">0</span>$</li>
+            <li><strong>TPS : </strong><span id="tps">0</span>$</li>
+            <li><strong>TVQ : </strong><span id="tvq">0</span>$</li>
+            <li style="border-top : 2px dotted black; padding-top: 3px;"><strong>Total : </strong><span id="total">0</span>$</li>
+          </ul>
         </div>
 
         <!-- Étape 2 -->
@@ -296,6 +303,12 @@
         const form = document.getElementById('reservation-form');
         modale.style.display = 'none';
         form.reset(); // ✅ Efface tous les champs du formulaire
+        document.getElementById('sub').innerText = 0;
+        document.getElementById('tps').innerText = 0;
+        document.getElementById('tvq').innerText = 0;
+        document.getElementById('total').innerText = 0;
+        document.getElementById('number').innerText = 0;
+        document.getElementById('price').innerText = "22,49";
         currentStep = 0; // ✅ Revenir à la première étape
         showStep(currentStep);
       });
@@ -312,6 +325,13 @@
       });
 
       participantsSelect.addEventListener('change', function() {
+        const price = getrPrice(participantsSelect.value);
+        document.getElementById('sub').innerText = price.sub;
+        document.getElementById('tps').innerText = price.tps;
+        document.getElementById('tvq').innerText = price.tvq;
+        document.getElementById('total').innerText = price.total;
+        document.getElementById('price').innerText = price.pricing;
+        document.getElementById('number').innerText = participantsSelect.value;
         customer_data.participants = participantsSelect.value;
       })
 
@@ -417,6 +437,36 @@
         .catch(error => {
           console.log('Fetch email error:', error);
         });
+    }
+
+    function getrPrice(number) {
+
+      let sub = 0;
+      let pricing = 0;
+
+      if (number < 20) {
+        sub = number*22.49;
+        pricing = "22,49";
+      } else if (number < 30) {
+        sub = number*21.49;
+        pricing = "21,49";
+      } else {
+        sub = number*20.49;
+        pricing = "20,49";
+      }
+      const tps = sub*0.05;
+      const tvq = sub*0.09975;
+      const total = sub + tps + tvq;
+
+      const price = {
+        sub : sub.toFixed(2),
+        tps : tps.toFixed(2),
+        tvq : tvq.toFixed(2),
+        total : total.toFixed(2),
+        pricing : pricing
+      }
+
+      return price;
     }
   </script>
 </body>
