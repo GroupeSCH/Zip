@@ -307,35 +307,26 @@
 
     function createInvoice(data) {
       const url = 'https://script.google.com/macros/s/AKfycbxDRmVdh1W7oBoB81BPgvcNjSPZOZPmBZIXJc5qmI6_gx8WQF3suD_CeoLMgry4Hx1_/exec';
-      
-      const body = {
-        name : data.name,
-        email : data.email,
-        phone_number : data.phone_number
-      };
-      
-      const options = {
-        method : "POST",
-        headers : {
-          'Content-Type' : 'application/json'
-        },
-        body : JSON.stringify(body)
-      };
 
-      fetch(url, options)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${reponse.status}`);
-        }
-        return response.text();
-      })
-      .then(reponseData => {
-        console.log('Success:', reponseData);
-      })
-      .catch(error => {
-        console.log('Error:', error);
+      const body = new URLSearchParams({
+        name: data.name,
+        email: data.email,
+        phone_number: data.phone_number,
+        participants: data.participants
       });
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body.toString()
+      })
+      .then(response => response.text())
+      .then(text => console.log('Réponse:', text))
+      .catch(error => console.error('Erreur:', error));
     }
+
 
     function sendEmail(direction, data) {
       let url = 'https://script.google.com/macros/s/AKfycbyOEoM1efz1YKaY0tMt0y5Nf3vDPkTIYEBXwWBsrksT06MeXp8-OisN7EI05WlaVJGQVA/exec';
@@ -343,11 +334,11 @@
         url += '?action=direction';
         url += '&status=' + data.status;
         url += '&phone=' + data.phone_number;
-        url += '&email=' + data.email;
       } else {
         url += '?action=confirmationFR';
         url += '&link=' + data.link;
       }
+      url += '&email=' + data.email;
       url += '&prenom=' + data.name;
       url += '&date=' + data.date;
       url += '&heure=' + data.heure;
@@ -361,7 +352,7 @@
           return reponse.text();
         })
         .then(reponseData => {
-          console.log('Response data', reponseData);
+          console.log('Response data for email', reponseData);
         })
         .catch(error => {
           console.log('Fetch email error:', error);
