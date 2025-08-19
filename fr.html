@@ -276,8 +276,9 @@
         return { dispo: {}, events: [] };
       }
     }
-    
-     ({dispo, events } = await loadDispos());
+
+     dispo, events = await loadDispos();
+
     } catch (e) {
       throw new Error('Erreur dans le chargement des dates disponibles : ' + e.message);
     }
