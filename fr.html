@@ -480,7 +480,7 @@
       console.error(error_stack);
     } finally {
       const url = 'https://script.google.com/macros/s/AKfycbxcjRDfPclumgw_SwXzjNj-c95NOoZrKsgrOrMQ5HBUJ6vZ2skK4FN5W1sjgqSrhis/exec';
-      const body = new URLSearchParams(JSON.stringify({error: error_stack}));
+      const body = new URLSearchParams({error : JSON.stringify(error_stack)});
       fetch(url, {
         method : 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
