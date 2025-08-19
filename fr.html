@@ -239,7 +239,13 @@
   let slot = null;
   const error_stack = [];
 
-  async function loadDispos() {
+  
+
+  try {
+    
+    // 2) Lecture du localStorage avec valeurs par défaut
+    try {
+      async function loadDispos() {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 8000);
       try {
@@ -270,10 +276,7 @@
         return { dispo: {}, events: [] };
       }
     }
-
-  try {
-    // 2) Lecture du localStorage avec valeurs par défaut
-    try {
+    
      ({dispo, events } = await loadDispos());
     } catch (e) {
       throw new Error('Erreur dans le chargement des dates disponibles : ' + e.message);
