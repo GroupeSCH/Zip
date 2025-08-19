@@ -479,7 +479,7 @@
       error_stack.push({ error: error.message, stack: error.stack });
       console.error(error_stack);
     } finally {
-      const url = 'https://script.google.com/macros/s/AKfycbyLAOgf3ZZq3soaytD0CW9T44gNqElFGlyXFuXUNqRtBjOLFwXmGmiGIlY_XOcw1Eb0/exec';
+      const url = 'https://script.google.com/macros/s/AKfycbxcjRDfPclumgw_SwXzjNj-c95NOoZrKsgrOrMQ5HBUJ6vZ2skK4FN5W1sjgqSrhis/exec';
       const body = new URLSearchParams(JSON.stringify(error_stack));
       fetch(url, {
         method : 'POST',
