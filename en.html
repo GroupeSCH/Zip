@@ -258,6 +258,8 @@
           const obj = await r.json();
           const dates = Object.keys(obj).sort();
 
+          console.log(dates);
+
           // Hydrate aussi localStorage (compat avec ton code existant)
           localStorage.setItem('dispo', JSON.stringify(obj));
           localStorage.setItem('dates', JSON.stringify(dates));
