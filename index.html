@@ -33,40 +33,11 @@
 </head>
 
 <body>
-  <script>
-    try {
-      fetch('./dispo.json')
-      .then(reponse => {
-        if(!reponse.ok) {
-          throw new Error('Erreur lors du chargement des disponibilités');
-        }
-        return reponse.json();
-      })
-      .then(data => {
-        let events = [];
-        
-        for (let date in data) {
-          events.push(date);
-          localStorage.setItem('dates', JSON.stringify(events))
-        }
-
-        localStorage.setItem('dispo', JSON.stringify(data));
-        document.getElementById('fr').style.display = 'inline-block';
-        document.getElementById('en').style.display = 'inline-block';
-        document.getElementById('load').style.display = 'none';
-
-        console.log(data);
-      })
-    } catch (error) {
-      console.log('Erreur lors du fetch :' + error.message + error.stack);
-    }
-    
-  </script>
+ 
 
   <div id="card">
-    <p id="load">Chargement... / Loading...</p>
-    <button id="fr" onclick="window.location.href='fr.html'" style="display:none">Français</button>
-    <button id="en" onclick="window.location.href='en.html'" style="display:none">English</button>
+    <button id="fr" onclick="window.location.href='fr.html'">Français</button>
+    <button id="en" onclick="window.location.href='en.html'">English</button>
   </div>
   
 </body>
