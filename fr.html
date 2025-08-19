@@ -231,278 +231,265 @@
   
 
 <script>
-  // 1) Déclare hors des try pour avoir la bonne portée
+  // Portée globale (utilisé partout ensuite)
   let events = [];
   let dispo = {};
-  let picker;             // on la déclare ici pour y accéder partout
+  let picker;
   let selected = { participants: 10 };
   let slot = null;
   const error_stack = [];
 
-  
-
-  try {
-    
-    // 2) Lecture du localStorage avec valeurs par défaut
+  // IIFE async = on peut utiliser await à l'intérieur
+  ;(async () => {
     try {
+      // -------- 1) Charger les dispos AVANT l'UI --------
       async function loadDispos() {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 8000);
-      try {
-        const r = await fetch('/.netlify/functions/get-dispos', {
-          headers: { 'Accept': 'application/json' },
-          cache: 'no-store',
-          signal: ctrl.signal
-        });
-        clearTimeout(t);
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const obj = await r.json();
-        return { dispo: obj, events: Object.keys(obj).sort() };
-      } catch (e) {
-        console.warn('get-dispos failed', e);
-        // fallbacks
-        const ls = localStorage.getItem('dispo');
-        if (ls) {
-          const obj = JSON.parse(ls);
-          return { dispo: obj, events: Object.keys(obj).sort() };
-        }
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 8000);
         try {
-          const r2 = await fetch('/dispo.json', { cache: 'no-store' });
-          if (r2.ok) {
-            const obj = await r2.json();
+          const r = await fetch('/.netlify/functions/get-dispos', {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store',
+            signal: ctrl.signal
+          });
+          clearTimeout(t);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+
+          const obj = await r.json();
+          const dates = Object.keys(obj).sort();
+
+          // Hydrate aussi localStorage (compat avec ton code existant)
+          localStorage.setItem('dispo', JSON.stringify(obj));
+          localStorage.setItem('dates', JSON.stringify(dates));
+
+          return { dispo: obj, events: dates };
+        } catch (e) {
+          console.warn('get-dispos failed', e);
+
+          // Fallbacks: LS puis /dispo.json statique
+          const ls = localStorage.getItem('dispo');
+          if (ls) {
+            const obj = JSON.parse(ls);
             return { dispo: obj, events: Object.keys(obj).sort() };
           }
-        } catch {}
-        return { dispo: {}, events: [] };
-      }
-    }
-
-     dispo, events = await loadDispos();
-
-    } catch (e) {
-      throw new Error('Erreur dans le chargement des dates disponibles : ' + e.message);
-    }
-
-    try {
-      const rawDispo = localStorage.getItem('dispo');
-      dispo = rawDispo ? JSON.parse(rawDispo) : {};               // ex: { "2025-08-20": ["10:00","11:00"] }
-      if (typeof dispo !== 'object' || dispo === null) dispo = {};
-    } catch (e) {
-      throw new Error('Erreur lors du chargement des heures disponibles : ' + e.message);
-    }
-
-    // 3) Sélecteurs & widgets de formulaire
-    const form = document.querySelector('form');
-
-    document.getElementById('close').addEventListener('click', function (e) {
-      e.preventDefault();
-      form.reset();
-      window.location.href = 'index.html';
-    });
-
-    const participants_select = document.getElementById('participants');
-    for (let i = 10; i <= 50; i++) {
-      const option = document.createElement('option');
-      option.value = i;
-      option.textContent = i;
-      participants_select.appendChild(option);
-    }
-    participants_select.addEventListener('change', function () {
-      selected.participants = Number(this.value);
-    });
-
-    // 4) Fonctions utilitaires
-    function open() {
-      // Affiche le champ et cache le loader
-      document.getElementById('datepicker').style.display = 'inline-block';
-      document.getElementById('date-loader').style.display = 'none';
-    }
-
-    function invoice() {
-      const url = 'https://script.google.com/macros/s/AKfycbxcwI0QRWiw36FeLWMC8li3_9bCBk7ygF8MUmTV3cVjVAfVrUgIunbATDPpAHEoC9Ul/exec';
-      const body = new URLSearchParams(selected);
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      });
-    }
-
-    function sendEmail() {
-      const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
-      const body = new URLSearchParams(selected);
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      });
-    }
-
-    // 5) Instanciation Pikaday (après définition d'open)
-    picker = new Pikaday({
-      field: document.getElementById('datepicker'),
-      format: 'YYYY-MM-DD',
-      // Sur ouverture du calendrier
-      onOpen: open, // <— passe la référence, pas l’appel
-      // Interdit tous les jours qui ne sont pas dans "events"
-      disableDayFn: function (date) {
-        try {
-          const ymd = date.toLocaleDateString('en-CA', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
-          return !events.includes(ymd); // events = ["YYYY-MM-DD"]
-        } catch (e) {
-          throw new Error('Erreur dans le traitement des jours non disponibles : ' + e.message);
+          try {
+            const r2 = await fetch('/dispo.json', { cache: 'no-store' });
+            if (r2.ok) {
+              const obj = await r2.json();
+              const dates = Object.keys(obj).sort();
+              localStorage.setItem('dispo', JSON.stringify(obj));
+              localStorage.setItem('dates', JSON.stringify(dates));
+              return { dispo: obj, events: dates };
+            }
+          } catch {}
+          return { dispo: {}, events: [] };
         }
-      },
-      // Quand une date est sélectionnée
-      onSelect: function (date) {
-        try {
-          selected.date = date.toDateString();
+      }
 
-          const key = date.toLocaleDateString('en-CA', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
+      // ✅ Déstructuration + assignation aux variables déjà déclarées
+      ({ dispo, events } = await loadDispos());
 
-          const list = document.getElementById('slots');
-          list.innerHTML = '';
-          document.getElementById('heure-loader').style.display = 'inline-block';
+      // -------- 2) UI / Form / Pikaday --------
+      const form = document.querySelector('form');
 
-          const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
-          heures.forEach(heure => {
-            const li = document.createElement('li');
-            li.innerText = heure;
-            li.addEventListener('click', () => {
-              document.querySelectorAll('#slots li').forEach(el => el.classList.remove('selected'));
-              li.classList.add('selected');
-              slot = heure;
-              selected.heure = heure;
+      document.getElementById('close').addEventListener('click', function (e) {
+        e.preventDefault();
+        form.reset();
+        window.location.href = 'index.html';
+      });
+
+      const participants_select = document.getElementById('participants');
+      for (let i = 10; i <= 50; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        participants_select.appendChild(option);
+      }
+      participants_select.addEventListener('change', function () {
+        selected.participants = Number(this.value);
+      });
+
+      function open() {
+        document.getElementById('datepicker').style.display = 'inline-block';
+        document.getElementById('date-loader').style.display = 'none';
+      }
+
+      function invoice() {
+        const url = 'https://script.google.com/macros/s/AKfycbxcwI0QRWiw36FeLWMC8li3_9bCBk7ygF8MUmTV3cVjVAfVrUgIunbATDPpAHEoC9Ul/exec';
+        const body = new URLSearchParams(selected);
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+      }
+
+      function sendEmail() {
+        const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
+        const body = new URLSearchParams(selected);
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+      }
+
+      picker = new Pikaday({
+        field: document.getElementById('datepicker'),
+        format: 'YYYY-MM-DD',
+        onOpen: open,
+        disableDayFn: function (date) {
+          try {
+            const ymd = date.toLocaleDateString('en-CA', {
+              timeZone: 'America/Toronto',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
             });
-            list.appendChild(li);
-          });
+            return !events.includes(ymd);
+          } catch (e) {
+            throw new Error('Erreur disableDayFn : ' + e.message);
+          }
+        },
+        onSelect: function (date) {
+          try {
+            selected.date = date.toDateString();
 
-          document.getElementById('heure-loader').style.display = 'none';
-          document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
-        } catch (error) {
-          throw new Error('Erreur dans l\'affichage des heures disponibles : ' + error.message);
+            const key = date.toLocaleDateString('en-CA', {
+              timeZone: 'America/Toronto',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            });
+
+            const list = document.getElementById('slots');
+            list.innerHTML = '';
+            document.getElementById('heure-loader').style.display = 'inline-block';
+
+            const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
+            heures.forEach(heure => {
+              const li = document.createElement('li');
+              li.innerText = heure;
+              li.addEventListener('click', () => {
+                document.querySelectorAll('#slots li').forEach(el => el.classList.remove('selected'));
+                li.classList.add('selected');
+                slot = heure;
+                selected.heure = heure;
+              });
+              list.appendChild(li);
+            });
+
+            document.getElementById('heure-loader').style.display = 'none';
+            document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
+          } catch (error) {
+            throw new Error('Erreur affichage heures : ' + error.message);
+          }
         }
-      }
-    });
-
-    
-
-    // Optionnel : forcer l’ouverture immédiate si l’input était caché
-    picker.show();
-
-    // 6) Soumission du formulaire
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      document.getElementById('slot-conf').style.display = 'none';
-
-      if (!slot) {
-        document.getElementById('slot-conf').style.display = 'inline-block';
-        return;
-      }
-
-      try {
-        selected.group = document.getElementById('group').value.trim();
-        selected.prenom = document.getElementById('res-prenom').value.trim();
-        selected.nom = document.getElementById('res-nom').value.trim();
-        selected.name = selected.prenom + ' ' + selected.nom;
-        selected.email = document.getElementById('email').value.trim();
-        selected.phone_number = document.getElementById('phone').value.trim();
-      } catch (e) {
-        throw new Error('Erreur lors de la récupération des données du client : ' + e.message);
-      }
-
-      form.style.display = 'none';
-
-      const card = document.getElementById('card');
-
-      const div = document.createElement('div');
-      div.className = 'paiement';
-
-      const title = document.createElement('h2');
-      title.innerText = 'Méthode de paiement';
-
-      const select = document.createElement('select');
-      select.id = 'paiement';
-
-      const online = document.createElement('option');
-      online.value = 'online';
-      online.innerText = 'Facture en ligne';
-
-      const surplace = document.createElement('option');
-      surplace.value = 'surplace';
-      surplace.innerText = 'Paiement sur place';
-
-      const buttonPayer = document.createElement('button');
-      buttonPayer.id = 'payer';
-      buttonPayer.type = 'button';
-      buttonPayer.innerText = 'Confirmer';
-
-      const annuler = document.createElement('button');
-      annuler.type = 'button';
-      annuler.innerText = 'Retour';
-      annuler.addEventListener('click', function () {
-        card.removeChild(div);
-        form.style.display = 'inline-block';
       });
 
-      select.appendChild(online);
-      select.appendChild(surplace);
-      div.appendChild(title);
-      div.appendChild(select);
-      div.appendChild(buttonPayer);
-      div.appendChild(annuler);
-      card.appendChild(div);
+      picker.show();
 
-      document.getElementById('payer').addEventListener('click', function () {
-        const option = document.getElementById('paiement').value;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        document.getElementById('slot-conf').style.display = 'none';
+
+        if (!slot) {
+          document.getElementById('slot-conf').style.display = 'inline-block';
+          return;
+        }
+
+        try {
+          selected.group = document.getElementById('group').value.trim();
+          selected.prenom = document.getElementById('res-prenom').value.trim();
+          selected.nom = document.getElementById('res-nom').value.trim();
+          selected.name = selected.prenom + ' ' + selected.nom;
+          selected.email = document.getElementById('email').value.trim();
+          selected.phone_number = document.getElementById('phone').value.trim();
+        } catch (e) {
+          throw new Error('Erreur collecte client : ' + e.message);
+        }
+
+        form.style.display = 'none';
+
         const card = document.getElementById('card');
 
-        card.innerHTML = '<p>Traitement de votre requête...</p>';
-        selected.status = (option === 'online') ? 'Facture square' : 'Paiement sur place';
+        const div = document.createElement('div');
+        div.className = 'paiement';
 
-        selected.action = 'confirmationFR';
-        const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+        const title = document.createElement('h2');
+        title.innerText = 'Méthode de paiement';
 
-        Promise.resolve(p1)
-          .then(() => {
-            selected.action = 'direction';
-            return sendEmail();
-          })
-          .then(() => {
-            card.innerHTML = '<p>Succès! Vous recevrez les détails par email sous peu. Vous pouvez quitter cette page.</p>';
-          })
-          .catch(() => {
-            card.innerHTML = '<p>Une erreur est survenue lors du traitement. Merci de réessayer.</p>';
-          });
+        const select = document.createElement('select');
+        select.id = 'paiement';
+
+        const online = document.createElement('option');
+        online.value = 'online';
+        online.innerText = 'Facture en ligne';
+
+        const surplace = document.createElement('option');
+        surplace.value = 'surplace';
+        surplace.innerText = 'Paiement sur place';
+
+        const buttonPayer = document.createElement('button');
+        buttonPayer.id = 'payer';
+        buttonPayer.type = 'button';
+        buttonPayer.innerText = 'Confirmer';
+
+        const annuler = document.createElement('button');
+        annuler.type = 'button';
+        annuler.innerText = 'Retour';
+        annuler.addEventListener('click', function () {
+          card.removeChild(div);
+          form.style.display = 'inline-block';
+        });
+
+        select.appendChild(online);
+        select.appendChild(surplace);
+        div.appendChild(title);
+        div.appendChild(select);
+        div.appendChild(buttonPayer);
+        div.appendChild(annuler);
+        card.appendChild(div);
+
+        document.getElementById('payer').addEventListener('click', function () {
+          const option = document.getElementById('paiement').value;
+          const card = document.getElementById('card');
+
+          card.innerHTML = '<p>Traitement de votre requête...</p>';
+          selected.status = (option === 'online') ? 'Facture square' : 'Paiement sur place';
+
+          selected.action = 'confirmationFR';
+          const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+
+          Promise.resolve(p1)
+            .then(() => {
+              selected.action = 'direction';
+              return sendEmail();
+            })
+            .then(() => {
+              card.innerHTML = '<p>Succès! Vous recevrez les détails par email sous peu. Vous pouvez quitter cette page.</p>';
+            })
+            .catch(() => {
+              card.innerHTML = '<p>Une erreur est survenue lors du traitement. Merci de réessayer.</p>';
+            });
+        });
       });
-    });
 
-  } catch (error) {
-    error_stack.push({ error: error.message, stack: error.stack });
-    console.error(error_stack);
-  } finally {
-    const url = 'https://script.google.com/macros/s/AKfycbyLAOgf3ZZq3soaytD0CW9T44gNqElFGlyXFuXUNqRtBjOLFwXmGmiGIlY_XOcw1Eb0/exec';
-    const body = new URLSearchParams(JSON.stringify(error_stack));
-
-    fetch(url, {
-      method : 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // format www-form
-      },
-      body : body
-    });
-  }
+    } catch (error) {
+      error_stack.push({ error: error.message, stack: error.stack });
+      console.error(error_stack);
+    } finally {
+      const url = 'https://script.google.com/macros/s/AKfycbyLAOgf3ZZq3soaytD0CW9T44gNqElFGlyXFuXUNqRtBjOLFwXmGmiGIlY_XOcw1Eb0/exec';
+      const body = new URLSearchParams(JSON.stringify(error_stack));
+      fetch(url, {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body : body
+      });
+    }
+  })();
 </script>
+
 
 </body>
 </html>
