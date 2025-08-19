@@ -2,553 +2,72 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Calendrier Disponibilités</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f6f8;
-      margin: 0;
-      padding: 0;
-    }
-
-    #calendar {
-      max-width: 900px;
-      margin: 40px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 40px;
+      text-align : center;
+      border : 2px solid black;
+      border-radius : 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      width : 40%;
+      margin : auto;
     }
 
     button {
-      background-color: #0d6efd;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s ease-in-out;
-      font-size: 16px;
-      max-width: fit-content;
-    }
-
-    button:hover {
-      background-color: #0b5ed7;
-    }
-
-    .fc-daygrid-day {
-      background: #f9f9f9;
-      border: 1px solid #e5e5e5;
-      padding: 0 !important;
-    }
-
-    .fc-daygrid-event {
-      background: none !important;
-      border: none !important;
-      display: flex !important;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: 100%;
-      margin: 0 !important;
-    }
-
-    .fc-daygrid-event button {
-      width: auto !important; /* Pas 100% */
-      min-width: 50px;
-      max-width: fit-content;
-      padding: 3px 6px;
-      font-size: 16px;
-      line-height: 1.2;
-      white-space: nowrap; /* Pas de retour à la ligne */
-    }
-
-
-    /* ✅ Modale */
-    #reservation-modale {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .modale-content {
-      background: white;
-      padding: 25px;
-      width: 400px;
+      width : 100px;
+      height : 30px;
+      background-color: rgb(42, 42, 240);
       border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-      animation: fadeIn 0.3s ease-in-out;
+      color: white;
+      border : none;
+      margin : auto;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95);}
-      to { opacity: 1; transform: scale(1);}
-    }
-
-    h3 {
-      margin-top: 0;
-      font-size: 20px;
-      color: #333;
-      text-align: center;
-    }
-
-    .form-step {
-      display: none;
-      gap: 1rem;
-    }
-
-    .form-step.active {
-      display: block;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      margin-bottom: 18px;
-      margin-right: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .form-navigation {
-      margin-top: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    /* ✅ Bouton Fermer */
-    #close-btn {
-      background-color: #dc3545;
-      margin-bottom: 10px;
-      width: 100%;
-    }
-
-    #close-btn:hover {
-      background-color: #bb2d3b;
-    }
-
-    /* ✅ Responsive pour tablettes */
-  @media screen and (max-width: 768px) {
-    #calendar {
-      max-width: 100%;
-      margin: 20px;
-      padding: 10px;
-    }
-
-    .fc-daygrid-event button {
-      width: auto !important;
-      min-width: 50px;
-      max-width: 65px;
-      padding: 3px 6px;
-      font-size: 8px;
-      line-height: 1.2;
-      white-space: nowrap; /* Pas de retour à la ligne */
-    }
-
-    .modale-content {
-      width: 90%; /* modale plus étroite */
-      padding: 15px;
-    }
-
-    .fc .fc-toolbar {
-      flex-wrap: wrap;
-      font-size: 14px;
-      justify-content: center;
-    }
-
-    .fc .fc-toolbar-title {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .fc-daygrid-day {
-      font-size: 12px;
-      padding: 2px !important;
-    }
-  }
-
-  /* ✅ Responsive pour smartphones */
-  @media screen and (max-width: 480px) {
-    .fc-daygrid-event button {
-      width: auto !important; /* Pas 100% */
-      min-width: 50px;
-      max-width: 65px;
-      padding: 3px 6px;
-      font-size: 8px;
-      line-height: 1.2;
-      white-space: nowrap; /* Pas de retour à la ligne */
-    }
-    /* Réduire aussi la toolbar */
-    .fc .fc-toolbar {
-      flex-wrap: wrap;
-      gap: 4px;
-      justify-content: center;
-    }
-
-    .fc-toolbar-chunk {
-      display: flex;
-      gap: 4px;
-    }
-}
 
   </style>
+
+  
 </head>
-<div id="loading-overlay" style="
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(255,255,255,0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-  z-index: 99999;">
-  Chargement du calendrier...
-</div>
+
 <body>
-  <div id="calendar"></div>
-
-  <!-- ✅ Modale avec formulaire multi-étapes -->
-  <div id="reservation-modale">
-    <div class="modale-content">
-      <h3 id="modale-title">Réserver</h3>
-      <form id="reservation-form">
-
-        <!-- Bouton Fermer (première étape uniquement) -->
-        <button type="button" id="close-btn">Fermer</button>
-
-        <!-- Étape 1 -->
-        <div class="form-step active" id="step-1">
-          <label>Nombre de participants :</label>
-          <select id="participants" required>
-            <option value="">Choisissez...</option>
-          </select>
-          <label>Choisissez un créneau :</label>
-          <select id="slot" required></select>
-          <ul style="list-style-type:none;">
-            <li style="margin-bottom: 5px;"><strong>Résumé : </strong><span id="price">22,49</span>$ x <span id="number">0</span> participants</li>
-            <li><strong>Sous-total : </strong><span id="sub">0</span>$</li>
-            <li><strong>TPS : </strong><span id="tps">0</span>$</li>
-            <li><strong>TVQ : </strong><span id="tvq">0</span>$</li>
-            <li style="border-top : 2px dotted black; padding-top: 3px;"><strong>Total : </strong><span id="total">0</span>$</li>
-          </ul>
-        </div>
-
-        <!-- Étape 2 -->
-        <div class="form-step" id="step-2">
-          <label>Groupe / Organisation :</label>
-          <input type="text" id="group" required>
-          <label>Nom du contact principal :</label>
-          <input type="text" id="name" required>
-          <label>Courriel :</label>
-          <input type="email" id="email" required>
-          <label>Téléphone :</label>
-          <input type="tel" id="phone" required>
-        </div>
-
-        <!-- Étape 3 -->
-        <div class="form-step" id="step-3">
-          <label>Options de paiement :</label>
-          <select id="payment" required>
-            <option value="">Choisissez...</option>
-            <option value="carte">Paiement en ligne</option>
-            <option value="surplace">Paiement sur place</option>
-          </select>
-        </div>
-
-        <!-- Navigation -->
-        <div class="form-navigation">
-          <button type="button" id="prev-btn">Retour</button>
-          <button type="button" id="next-btn">Continuer</button>
-        </div>
-      </form>
-
-      <!--Remerciement!-->
-      <div id="thank-you-message" style="display:none; text-align:center; margin-top:15px;">
-        <h4>Merci pour votre réservation !</h4>
-        <p>si vous avez choisis l'option de paiement en ligne, la facture vous à été envoyé par email. Consultez vos email et suivez le lien pour régler votre facture.</p>
-        <p id="payment-link" style="margin-top:10px;"></p>
-        <button type="button" id="close-thankyou-btn" style="
-          margin-top:15px;
-          background-color:#0d6efd;
-          color:white;
-          border:none;
-          padding:10px 15px;
-          border-radius:6px;
-          cursor:pointer;">Fermer</button>
-      </div>
-
-    </div>
-  </div>
-
   <script>
-    const participantsSelect = document.getElementById('participants');
-    const modale = document.getElementById('reservation-modale');
-    const closeBtn = document.getElementById('close-btn');
-
-    let customer_data = {};
-
-    for (let i = 10; i <= 50; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i;
-        participantsSelect.appendChild(option);
-    }
-
-    const loadingOverlay = document.getElementById('loading-overlay');
-    let thankYouMessage, paymentLink;
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const calendarEl = document.getElementById('calendar');
-      const steps = document.querySelectorAll('.form-step');
-      const nextBtn = document.getElementById('next-btn');
-      const prevBtn = document.getElementById('prev-btn');
-      const slotSelect = document.getElementById('slot');
-      let currentStep = 0;
-      let currentSlots = {};
-
-      function showStep(index) {
-        steps.forEach((step, i) => step.classList.toggle('active', i === index));
-        prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
-        nextBtn.textContent = index === steps.length - 1 ? 'Valider' : 'Continuer';
-      }
-      showStep(currentStep);
-
-      thankYouMessage = document.getElementById('thank-you-message');
-      paymentLink = document.getElementById('payment-link');
-
-      nextBtn.addEventListener('click', () => {
-
-        if (!validateCurrentStep()) return;
-        if (currentStep < steps.length - 1) {
-          currentStep++;
-          showStep(currentStep);
-        } else {
-          customer_data.name = document.getElementById('name').value.trim();
-          customer_data.email = document.getElementById('email').value.trim();
-          customer_data.phone_number = document.getElementById('phone').value.trim();
-          customer_data.heure = document.getElementById('slot').value.trim();
-          customer_data.group = document.getElementById('group').value.trim();
-          const option = document.getElementById('payment').value;
-          
-          document.getElementById('reservation-form').style.display = 'none';
-          thankYouMessage.style.display = 'block';
-
-          if (option === 'carte') {
-            customer_data.status = 'Facture square';
-            createInvoice(customer_data).then(link => {
-        // Afficher message et lien après récupération
-              paymentLink.innerHTML = `<a href="${link}" target="_blank" style="color:#0d6efd; font-weight:bold;">Payer maintenant</a>`;
-              thankYouMessage.style.display = 'block';
-              // Envoyer email après affichage
-              sendEmail(false, customer_data);
-              sendEmail(true, customer_data);
-          }).catch(error => {
-            console.error('Erreur lors de la création de la facture:', error);
-          })
-          } else {
-            customer_data.status = 'Paiement sur place';
-            sendEmail(false, customer_data);
-            sendEmail(true, customer_data);
-          }
-
+    try {
+      fetch('./dispo.json')
+      .then(reponse => {
+        if(!reponse.ok) {
+          throw new Error('Erreur lors du chargement des disponibilités');
         }
-      });
-
-      prevBtn.addEventListener('click', () => {
-        if (currentStep > 0) {
-          currentStep--;
-          showStep(currentStep);
-        }
-      });
-
-      // ✅ Bouton fermer
-      closeBtn.addEventListener('click', () => {
-        const form = document.getElementById('reservation-form');
-        modale.style.display = 'none';
-        form.reset(); // ✅ Efface tous les champs du formulaire
-        document.getElementById('sub').innerText = 0;
-        document.getElementById('tps').innerText = 0;
-        document.getElementById('tvq').innerText = 0;
-        document.getElementById('total').innerText = 0;
-        document.getElementById('number').innerText = 0;
-        document.getElementById('price').innerText = "22,49";
-        currentStep = 0; // ✅ Revenir à la première étape
-        showStep(currentStep);
-      });
-
-      document.getElementById('close-thankyou-btn').addEventListener('click', () => {
-        modale.style.display = 'none';
-        // Réinitialiser le formulaire et la modale pour la prochaine utilisation
-        document.getElementById('reservation-form').reset();
-        document.getElementById('reservation-form').style.display = 'block';
-        thankYouMessage.style.display = 'none';
-        paymentLink.innerHTML = '';
-        currentStep = 0;
-        showStep(currentStep);
-      });
-
-      participantsSelect.addEventListener('change', function() {
-        const price = getrPrice(participantsSelect.value);
-        document.getElementById('sub').innerText = price.sub;
-        document.getElementById('tps').innerText = price.tps;
-        document.getElementById('tvq').innerText = price.tvq;
-        document.getElementById('total').innerText = price.total;
-        document.getElementById('price').innerText = price.pricing;
-        document.getElementById('number').innerText = participantsSelect.value;
-        customer_data.participants = participantsSelect.value;
+        return reponse.json();
       })
-
-      function validateCurrentStep() {
-        const currentFields = steps[currentStep].querySelectorAll('input, select');
-        for (let field of currentFields) {
-            if (!field.checkValidity()) {
-            field.reportValidity(); // Affiche le message natif HTML5
-            return false;
-            }
+      .then(data => {
+        let events = [];
+        
+        for (let date in data) {
+          events.push(date);
+          localStorage.setItem('dates', JSON.stringify(events))
         }
-        return true;
-      }
 
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'fr',
-        initialView: 'dayGridMonth',
-        showNonCurrentDates: false,
-        fixedWeekCount: false,
-        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-        buttonText: {
-          today: "Aujourd'hui"
-        },
-        events: [],
+        localStorage.setItem('dispo', JSON.stringify(data));
+        document.getElementById('fr').style.display = 'inline-block';
+        document.getElementById('en').style.display = 'inline-block';
+        document.getElementById('load').style.display = 'none';
 
-        eventContent: function(info) {
-          return { html: '<button>Réserver</button>' };
-        },
-
-        eventClick: function (info) {
-          currentSlots = info.event.extendedProps.info;
-          slotSelect.innerHTML = '';
-          Object.keys(currentSlots).forEach(slotName => {
-            slotSelect.innerHTML += `<option value="${slotName}">${currentSlots[slotName]}</option>`;
-          });
-
-          const eventDate = info.event.start.toISOString().split('T')[0];
-          customer_data.date = eventDate;
-
-          modale.style.display = 'flex';
-          currentStep = 0;
-          showStep(currentStep);
-        }
-      });
-
-      fetch('https://script.google.com/macros/s/AKfycbzb9Yy4c-uJTEsoD9NlFGpnTwX7QnI4t6azDTD5C4v2XnUQMNJ0f9IVsQHmbYrYTpSu/exec')
-        .then(response => response.json())
-        .then(events => {
-          calendar.addEventSource(events);
-          calendar.render();
-          loadingOverlay.style.display = 'none';
-        })
-        .catch(error => console.error('Erreur lors du fetch :', error));
-    });
-
-    function createInvoice(data) {
-      const url = 'https://script.google.com/macros/s/AKfycbxDRmVdh1W7oBoB81BPgvcNjSPZOZPmBZIXJc5qmI6_gx8WQF3suD_CeoLMgry4Hx1_/exec';
-
-      const body = new URLSearchParams({
-        name: data.name,
-        email: data.email,
-        phone_number: data.phone_number,
-        participants: data.participants
-      });
-
-      return fetch(url, {
-        method: "POST",
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
+        console.log(data);
       })
-      .then(response => response.text())
-      .then(link => {
-        return link; // On retourne le lien
-      });
+    } catch (error) {
+      console.log('Erreur lors du fetch :' + error.message + error.stack);
     }
-
-
-
-    function sendEmail(direction, data) {
-      let url = 'https://script.google.com/macros/s/AKfycbyOEoM1efz1YKaY0tMt0y5Nf3vDPkTIYEBXwWBsrksT06MeXp8-OisN7EI05WlaVJGQVA/exec';
-      if (direction) {
-        url += '?action=direction';
-        url += '&status=' + data.status;
-        url += '&phone=' + data.phone_number;
-        url += '&group=' + data.group;
-      } else {
-        url += '?action=confirmationFR';
-        url += '&link=' + data.link;
-      }
-      url += '&email=' + data.email;
-      url += '&prenom=' + data.name;
-      url += '&date=' + data.date;
-      url += '&heure=' + data.heure;
-      url += '&participants=' + data.participants;
-
-      fetch(url)
-        .then(reponse => {
-          if (!reponse.ok) {
-            throw new Error(`HTTP error! status: ${reponse.status}`)
-          }
-          return reponse.text();
-        })
-        .then(reponseData => {
-          console.log('Response data for email', reponseData);
-        })
-        .catch(error => {
-          console.log('Fetch email error:', error);
-        });
-    }
-
-    function getrPrice(number) {
-
-      let sub = 0;
-      let pricing = 0;
-
-      if (number < 20) {
-        sub = number*22.49;
-        pricing = "22,49";
-      } else if (number < 30) {
-        sub = number*21.49;
-        pricing = "21,49";
-      } else {
-        sub = number*20.49;
-        pricing = "20,49";
-      }
-      const tps = sub*0.05;
-      const tvq = sub*0.09975;
-      const total = sub + tps + tvq;
-
-      const price = {
-        sub : sub.toFixed(2),
-        tps : tps.toFixed(2),
-        tvq : tvq.toFixed(2),
-        total : total.toFixed(2),
-        pricing : pricing
-      }
-
-      return price;
-    }
+    
   </script>
+
+  <div id="card">
+    <p id="load">Chargement... / Loading...</p>
+    <button id="fr" onclick="window.location.href='fr.html'" style="display:none">Français</button>
+    <button id="en" onclick="window.location.href='en.html'" style="display:none">English</button>
+  </div>
+  
 </body>
 </html>

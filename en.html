@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exemple Pikaday</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+  <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align : center;
+      border : 2px solid black;
+      border-radius : 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      width : 40%;
+      margin : auto;
+    }
+
+    #datepicker {
+      text-align : center;
+      justify-content: center;
+    }
+
+    label {
+      font-size: 16px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    input {
+      font-size: 16px;
+      padding: 8px;
+      width: 180px;
+      height : 20px;
+      border-radius : 12px;
+    }
+
+    #participants {
+      font-size: 13px;
+      padding: 8px;
+      width: 180px;
+      height : 40px;
+      border-radius : 12px;
+    }
+
+    #slots {
+      list-style-type : none;
+      text-align: center;
+    }
+
+    #slots li {
+      display : inline-block;
+      border : 1px solid black;
+      margin : 5px;
+      padding : 5px;
+      background-color: rgb(184, 182, 182);
+      width : fit-content;
+      height : auto;
+      border-radius: 12px;
+      cursor : pointer;
+      transition : background 0.3s;
+    }
+
+    #slots li:hover {
+      background-color: rgb(60, 60, 225);
+    }
+
+    #slots li.selected {
+      background-color: green;
+      color : white;
+    }
+
+    #datepicker {
+      border-radius : 12px;
+    }
+
+    #responsable, #participants-info, #date-info {
+      display : flex;
+      flex-direction: column;
+      gap : 2rem;
+    }
+
+    .form-info {
+      display: flex;
+      flex-direction: row;
+      text-align: center;
+      gap : 2rem;
+      margin : auto;
+    }
+
+    button {
+      width : 100px;
+      height : 30px;
+      background-color: rgb(42, 42, 240);
+      border-radius: 12px;
+      color: white;
+      border : none;
+      margin : auto;
+    }
+
+    .paiement {
+      display : flex;
+      flex-direction: column;
+      text-align: center;
+      gap: 2rem;
+    }
+
+    .paiement select {
+      width : 120px;
+      border-radius: 12px;
+      height : 30px;
+      margin : auto;
+    }
+
+    /* Enlever le fond gris sur les jours non sélectionnables */
+      .pika-single td.is-disabled .pika-button {
+        background: none!important;
+        box-shadow: none !important;   /* au cas où un style ajoute une ombre */
+      }
+
+      /* Assure-toi qu'au survol ça ne redevient pas gris */
+      .pika-single td.is-disabled .pika-button:hover {
+        background: transparent !important;
+      }
+
+      /* Si “aujourd’hui” est aussi désactivé, neutraliser sa couleur spéciale */
+      .pika-single td.is-disabled.is-today .pika-button {
+        background: none !important;
+      }
+
+      .pika-single td.is-disabled .pika-button {
+        position: relative;
+        cursor: not-allowed;
+      }
+
+      .pika-single td.is-disabled .pika-button::after {
+        content: "";
+        position: absolute;
+        left: 12%;
+        right: 12%;
+        top: 50%;
+        height: 2px;
+        background: #c00;          /* couleur du “barrage” */
+        transform: translateY(-50%) rotate(-15deg);
+        pointer-events: none;       /* ne réactive pas le clic */
+        opacity: 0.9;
+      }
+
+    @media screen and (max-width: 600px) {
+      .form-info {
+        display : flex;
+        flex-direction: column;
+      }
+
+      input, #participants {
+        max-width : 100px;
+        font-size : 12px;
+      }
+
+      ul {
+        margin : auto;
+        padding: 0;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="card">
+    <form id="form-fr">
+      <h3>Reservation information</h3>
+      <label>Choose a date</label>
+      <input type="text" id="datepicker" style="display:none"; autocomplete="off" required/>
+      <p id="date-loader">Loading...</p>
+
+
+      <label id="heures" style="display:none">Pick a time</label>
+      <div id="crenaux">
+        <p id="heure-loader" style="display:none">Loading...</p>
+        <p style="display:none; color:red" id="slot-conf">* Please choose a slot</p>
+        <ul id="slots"></ul>
+      </div>
+      
+      <h3>Participation information</h3>
+      <div id="participants-info">
+        <div class="form-info">
+          <div>
+            <label>Group name</label>
+            <input type="text" id="group"  required/>
+          </div>
+          <div>
+            <label>Number of participants</label>
+            <select id="participants" required>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <h3>Details of the person in charge</h3>
+      <div id="responsable">
+        <div class="form-info">
+          <div>
+            <label>First name</label>
+            <input type="text" id="res-prenom" required/>
+          </div>
+          <div>
+            <label>Last name</label>
+            <input type="text" id="res-nom" required/>
+          </div>
+        </div>
+        <div class="form-info">
+          <div>
+            <label>Phone number</label>
+            <input type="phone" id="phone" required/>
+          </div>
+          <div>
+            <label>Email</label>
+            <input type="text" id='email' required/>
+          </div>
+        </div>
+        <button type="submit" id="next">Continue</button>
+        <button id="close">Cancel</button>
+      </div>
+    </form>
+  </div>
+  
+
+  <script>
+  // 1) Déclare hors des try pour avoir la bonne portée
+  let events = [];
+  let dispo = {};
+  let picker;             // on la déclare ici pour y accéder partout
+  let selected = { participants: 10 };
+  let slot = null;
+  const error_stack = [];
+
+  try {
+    // 2) Lecture du localStorage avec valeurs par défaut
+    try {
+      const rawEvents = localStorage.getItem('dates');
+      events = rawEvents ? JSON.parse(rawEvents) : [];            // ex: ["2025-08-20", ...]
+      if (!Array.isArray(events)) events = [];
+    } catch (e) {
+      throw new Error('Erreur dans le chargement des dates disponibles : ' + e.message);
+    }
+
+    try {
+      const rawDispo = localStorage.getItem('dispo');
+      dispo = rawDispo ? JSON.parse(rawDispo) : {};               // ex: { "2025-08-20": ["10:00","11:00"] }
+      if (typeof dispo !== 'object' || dispo === null) dispo = {};
+    } catch (e) {
+      throw new Error('Erreur lors du chargement des heures disponibles : ' + e.message);
+    }
+
+    // 3) Sélecteurs & widgets de formulaire
+    const form = document.querySelector('form');
+
+    document.getElementById('close').addEventListener('click', function (e) {
+      e.preventDefault();
+      form.reset();
+      window.location.href = 'index.html';
+    });
+
+    const participants_select = document.getElementById('participants');
+    for (let i = 10; i <= 50; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      participants_select.appendChild(option);
+    }
+    participants_select.addEventListener('change', function () {
+      selected.participants = Number(this.value);
+    });
+
+    // 4) Fonctions utilitaires
+    function open() {
+      // Affiche le champ et cache le loader
+      document.getElementById('datepicker').style.display = 'inline-block';
+      document.getElementById('date-loader').style.display = 'none';
+    }
+
+    function invoice() {
+      const url = 'https://script.google.com/macros/s/AKfycbxcwI0QRWiw36FeLWMC8li3_9bCBk7ygF8MUmTV3cVjVAfVrUgIunbATDPpAHEoC9Ul/exec';
+      const body = new URLSearchParams(selected);
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+    }
+
+    function sendEmail() {
+      const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
+      const body = new URLSearchParams(selected);
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+    }
+
+    // 5) Instanciation Pikaday (après définition d'open)
+    picker = new Pikaday({
+      field: document.getElementById('datepicker'),
+      format: 'YYYY-MM-DD',
+      // Sur ouverture du calendrier
+      onOpen: open, // <— passe la référence, pas l’appel
+      // Interdit tous les jours qui ne sont pas dans "events"
+      disableDayFn: function (date) {
+        try {
+          const ymd = date.toLocaleDateString('en-CA', {
+            timeZone: 'America/Toronto',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+          return !events.includes(ymd); // events = ["YYYY-MM-DD"]
+        } catch (e) {
+          throw new Error('Erreur dans le traitement des jours non disponibles : ' + e.message);
+        }
+      },
+      // Quand une date est sélectionnée
+      onSelect: function (date) {
+        try {
+          selected.date = date.toDateString();
+
+          const key = date.toLocaleDateString('en-CA', {
+            timeZone: 'America/Toronto',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+
+          const list = document.getElementById('slots');
+          list.innerHTML = '';
+          document.getElementById('heure-loader').style.display = 'inline-block';
+
+          const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
+          heures.forEach(heure => {
+            const li = document.createElement('li');
+            li.innerText = heure;
+            li.addEventListener('click', () => {
+              document.querySelectorAll('#slots li').forEach(el => el.classList.remove('selected'));
+              li.classList.add('selected');
+              slot = heure;
+              selected.heure = heure;
+            });
+            list.appendChild(li);
+          });
+
+          document.getElementById('heure-loader').style.display = 'none';
+          document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
+        } catch (error) {
+          throw new Error('Erreur dans l\'affichage des heures disponibles : ' + error.message);
+        }
+      }
+    });
+
+    // Optionnel : forcer l’ouverture immédiate si l’input était caché
+    picker.show();
+
+    // 6) Soumission du formulaire
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('slot-conf').style.display = 'none';
+
+      if (!slot) {
+        document.getElementById('slot-conf').style.display = 'inline-block';
+        return;
+      }
+
+      try {
+        selected.group = document.getElementById('group').value.trim();
+        selected.prenom = document.getElementById('res-prenom').value.trim();
+        selected.nom = document.getElementById('res-nom').value.trim();
+        selected.name = selected.prenom + ' ' + selected.nom;
+        selected.email = document.getElementById('email').value.trim();
+        selected.phone_number = document.getElementById('phone').value.trim();
+      } catch (e) {
+        throw new Error('Erreur lors de la récupération des données du client : ' + e.message);
+      }
+
+      form.style.display = 'none';
+
+      const card = document.getElementById('card');
+
+      const div = document.createElement('div');
+      div.className = 'paiement';
+
+      const title = document.createElement('h2');
+      title.innerText = 'Payment method';
+
+      const select = document.createElement('select');
+      select.id = 'paiement';
+
+      const online = document.createElement('option');
+      online.value = 'online';
+      online.innerText = 'Online invoice';
+
+      const surplace = document.createElement('option');
+      surplace.value = 'surplace';
+      surplace.innerText = 'Pay on site';
+
+      const buttonPayer = document.createElement('button');
+      buttonPayer.id = 'payer';
+      buttonPayer.type = 'button';
+      buttonPayer.innerText = 'Confirm';
+
+      const annuler = document.createElement('button');
+      annuler.type = 'button';
+      annuler.innerText = 'Back';
+      annuler.addEventListener('click', function () {
+        card.removeChild(div);
+        form.style.display = 'inline-block';
+      });
+
+      select.appendChild(online);
+      select.appendChild(surplace);
+      div.appendChild(title);
+      div.appendChild(select);
+      div.appendChild(buttonPayer);
+      div.appendChild(annuler);
+      card.appendChild(div);
+
+      document.getElementById('payer').addEventListener('click', function () {
+        const option = document.getElementById('paiement').value;
+        const card = document.getElementById('card');
+
+        card.innerHTML = '<p>Traitement de votre requête...</p>';
+        selected.status = (option === 'online') ? 'Facture square' : 'Paiement sur place';
+
+        selected.action = 'confirmationEN';
+        const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+
+        Promise.resolve(p1)
+          .then(() => {
+            selected.action = 'direction';
+            return sendEmail();
+          })
+          .then(() => {
+            card.innerHTML = '<p>Success! You will recieve the reservation detials sholrtly. You can safely leave this page.</p>';
+          })
+          .catch(() => {
+            card.innerHTML = '<p>An error happend during the treatement. Please try again later.</p>';
+          });
+      });
+    });
+
+  } catch (error) {
+    error_stack.push({ error: error.message, stack: error.stack });
+  } finally {
+    const url = 'https://script.google.com/macros/s/AKfycbyLAOgf3ZZq3soaytD0CW9T44gNqElFGlyXFuXUNqRtBjOLFwXmGmiGIlY_XOcw1Eb0/exec';
+    const body = new URLSearchParams(JSON.stringify(error_stack));
+
+    fetch(url, {
+      method : 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded', // format www-form
+      },
+      body : body
+    });
+  }
+</script>
+</body>
+</html>
