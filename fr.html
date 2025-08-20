@@ -272,7 +272,7 @@
             const obj = JSON.parse(ls);
             return { dispo: obj, events: Object.keys(obj).sort() };
           }
-          try {
+          /* try {
             const r2 = await fetch('/dispo.json', { cache: 'no-store' });
             if (r2.ok) {
               const obj = await r2.json();
@@ -281,7 +281,7 @@
               localStorage.setItem('dates', JSON.stringify(dates));
               return { dispo: obj, events: dates };
             }
-          } catch {}
+          } catch {} */
           return { dispo: {}, events: [] };
         }
       }
