@@ -247,7 +247,7 @@
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 8000);
         try {
-          const r = await fetch('/.netlify/functions/get-dispos', {
+          const r = await fetch('/api/get-dispos', {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store',
             signal: ctrl.signal
