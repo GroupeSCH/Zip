@@ -248,6 +248,7 @@
         const t = setTimeout(() => ctrl.abort(), 8000);
         try {
           const r = await fetch('https://zip-calendar-widget.netlify.app/.netlify/functions/get-dispos', {
+            method : 'GET',
             headers: { 
               'Accept': 'application/json',
               'x-admin-key' : '514Z1pl1n3!'
