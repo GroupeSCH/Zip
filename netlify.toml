@@ -15,7 +15,7 @@
 
 [functions."sync-dispos"]
 
-    schedule = "*/15 * * * *"
+    schedule = "*/5 * * * *"
 
 [[redirects]]
     from = "/api/*"
