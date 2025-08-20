@@ -1,5 +1,5 @@
 // netlify/functions/update-dispos.js
-import { get, set } from '@netlify/blobs';
+const { get, set } = require('@netlify/blobs');
 
 const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const RE_TIME = /^\d{2}:\d{2}$/;
