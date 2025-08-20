@@ -1,8 +1,7 @@
-import { getStore } from "@netlify/blobs";
 
 export async function handler() {
+    const { getStore } = await import('@netlify/blobs');
     try {
-
         // Load @netlify/blobs
         const store = getStore('global');
         
