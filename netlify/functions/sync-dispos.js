@@ -7,7 +7,7 @@ export async function handler() {
         
 
         // Chargement des disponibilités de la bd
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxhQEwmB3vY8P5d04Ef0GBrjU_W9Uhv3IhQ-4nMy1u6Iz9aNn0o26LgvrauqVJl78Wv/exec');
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxhQEwmB3vY8P5d04Ef0GBrjU_W9Uhv3IhQ-4nMy1u6Iz9aNn0o26LgvrauqVJl78Wv/exec?path=dispos');
         if (!res.ok) {
             throw new Error(`Error from external api to fetch dispos : ${res.status}`);
         }
