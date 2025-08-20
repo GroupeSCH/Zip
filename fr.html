@@ -257,8 +257,8 @@
           });
           clearTimeout(t);
           if (!r.ok) throw new Error('HTTP ' + r.status);
-          console.log(`Raw get-dispos : ${r.json()}`);
           const obj = await r.json();
+          console.log(obj);
           const dates = Object.keys(obj).sort();
 
           // Hydrate aussi localStorage (compat avec ton code existant)
