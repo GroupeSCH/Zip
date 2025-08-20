@@ -258,7 +258,7 @@
           clearTimeout(t);
           if (!r.ok) throw new Error('HTTP ' + r.status);
           const obj = await r.json();
-          console.log(JSON.parse(obj));
+          console.log(obj);
           const dates = Object.keys(obj).sort();
 
           // Hydrate aussi localStorage (compat avec ton code existant)
