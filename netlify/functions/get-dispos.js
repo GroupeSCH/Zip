@@ -1,6 +1,7 @@
-import { getStore } from "@netlify/blobs";
 
 export default async function handler(req, context) {
+  const { getStore } = await import('@netlify/blobs');
+  
   try {
     const store = getStore('global');
     const dispos = await store.get('dispo.json', {type: 'json'}) ?? {};
