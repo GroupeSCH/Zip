@@ -1,10 +1,9 @@
 // netlify/functions/update-dispos.js
-import { getStore } from '@netlify/blobs';
-
 const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const RE_TIME = /^\d{2}:\d{2}$/;
 
 export async function handler(event) {
+  const { getStore } = await import('@netlify/blobs');
   if (!['POST', 'PUT', 'PATCH'].includes(event.httpMethod)) {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
