@@ -12,11 +12,11 @@ export default async function handler(req, context) {
 
     // Parse JSON
     const dispos = await res.json();
-    const dispo = JSON.parse(dispos)
+    const value = 
 
     // Enregistrement dans le store Netlify
     await store.set("dispo.json", {
-      value: dispo,
+      value: dispos,
       contentType: "application/json"
     });
 
