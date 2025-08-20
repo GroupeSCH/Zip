@@ -13,7 +13,7 @@
     node_bundler = "esbuild"
 
 
-[functions."sync-dispo"]
+[functions."sync-dispos"]
 
     schedule = "*/15 * * * *"
 
