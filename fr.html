@@ -356,7 +356,6 @@
 
             const list = document.getElementById('slots');
             list.innerHTML = '';
-            document.getElementById('heure-loader').style.display = 'inline-block';
 
             const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
             heures.forEach(heure => {
@@ -370,8 +369,7 @@
               });
               list.appendChild(li);
             });
-
-            document.getElementById('heure-loader').style.display = 'none';
+            
             document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
           } catch (error) {
             throw new Error('Erreur affichage heures : ' + error.message);
