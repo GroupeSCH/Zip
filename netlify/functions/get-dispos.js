@@ -4,7 +4,7 @@ export default async function handler(req, context) {
     const store = getStore('global');
     const dispos = await store.get('dispo.json');
 
-    return new Response(JSON.parse(dispos), {
+    return new Response(dispos, {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
