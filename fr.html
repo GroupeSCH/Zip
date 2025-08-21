@@ -329,6 +329,17 @@
       picker = new Pikaday({
         field: document.getElementById('datepicker'),
         format: 'YYYY-MM-DD',
+        i18n: {
+          months: [
+            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+          ],
+          weekdays: [
+            'Dimanche', 'Lundi', 'Mardi', 'Mercredi',
+            'Jeudi', 'Vendredi', 'Samedi'
+          ],
+          weekdaysShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+        },
         onOpen: open,
         disableDayFn: function (date) {
           try {
@@ -369,7 +380,7 @@
               });
               list.appendChild(li);
             });
-            
+
             document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
           } catch (error) {
             throw new Error('Erreur affichage heures : ' + error.message);
