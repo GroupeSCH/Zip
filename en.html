@@ -176,12 +176,9 @@
       <h3>Reservation information</h3>
       <label>Choose a date</label>
       <input type="text" id="datepicker" style="display:none"; autocomplete="off" required/>
-      <p id="date-loader">Loading...</p>
 
-
-      <label id="heures" style="display:none">Pick a time</label>
       <div id="crenaux">
-        <p id="heure-loader" style="display:none">Loading...</p>
+        <label id="heures" style="display:none">Pick a time</label>
         <p style="display:none; color:red" id="slot-conf">* Please choose a slot</p>
         <ul id="slots"></ul>
       </div>
@@ -231,240 +228,261 @@
   
 
   <script>
-  // 1) Déclare hors des try pour avoir la bonne portée
+  // Portée globale (utilisé partout ensuite)
   let events = [];
   let dispo = {};
-  let picker;             // on la déclare ici pour y accéder partout
+  let picker;
   let selected = { participants: 10 };
   let slot = null;
   const error_stack = [];
 
-  try {
-    // 2) Lecture du localStorage avec valeurs par défaut
+  // IIFE async = on peut utiliser await à l'intérieur
+  ;(async () => {
     try {
-      const rawEvents = localStorage.getItem('dates');
-      events = rawEvents ? JSON.parse(rawEvents) : [];            // ex: ["2025-08-20", ...]
-      if (!Array.isArray(events)) events = [];
-    } catch (e) {
-      throw new Error('Erreur dans le chargement des dates disponibles : ' + e.message);
-    }
+      // -------- 1) Charger les dispos AVANT l'UI --------
+      async function loadDispos() {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 8000);
 
-    try {
-      const rawDispo = localStorage.getItem('dispo');
-      dispo = rawDispo ? JSON.parse(rawDispo) : {};               // ex: { "2025-08-20": ["10:00","11:00"] }
-      if (typeof dispo !== 'object' || dispo === null) dispo = {};
-    } catch (e) {
-      throw new Error('Erreur lors du chargement des heures disponibles : ' + e.message);
-    }
-
-    // 3) Sélecteurs & widgets de formulaire
-    const form = document.querySelector('form');
-
-    document.getElementById('close').addEventListener('click', function (e) {
-      e.preventDefault();
-      form.reset();
-      window.location.href = 'index.html';
-    });
-
-    const participants_select = document.getElementById('participants');
-    for (let i = 10; i <= 50; i++) {
-      const option = document.createElement('option');
-      option.value = i;
-      option.textContent = i;
-      participants_select.appendChild(option);
-    }
-    participants_select.addEventListener('change', function () {
-      selected.participants = Number(this.value);
-    });
-
-    // 4) Fonctions utilitaires
-    function open() {
-      // Affiche le champ et cache le loader
-      document.getElementById('datepicker').style.display = 'inline-block';
-      document.getElementById('date-loader').style.display = 'none';
-    }
-
-    function invoice() {
-      const url = 'https://script.google.com/macros/s/AKfycbxcwI0QRWiw36FeLWMC8li3_9bCBk7ygF8MUmTV3cVjVAfVrUgIunbATDPpAHEoC9Ul/exec';
-      const body = new URLSearchParams(selected);
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      });
-    }
-
-    function sendEmail() {
-      const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
-      const body = new URLSearchParams(selected);
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      });
-    }
-
-    // 5) Instanciation Pikaday (après définition d'open)
-    picker = new Pikaday({
-      field: document.getElementById('datepicker'),
-      format: 'YYYY-MM-DD',
-      // Sur ouverture du calendrier
-      onOpen: open, // <— passe la référence, pas l’appel
-      // Interdit tous les jours qui ne sont pas dans "events"
-      disableDayFn: function (date) {
         try {
-          const ymd = date.toLocaleDateString('en-CA', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
+          const r = await fetch('https://zip-calendar-widget.netlify.app/.netlify/functions/get-dispos', {
+            method : 'GET',
+            headers: { 
+              'Accept': 'application/json'
+            },
+            cache: 'no-store',
+            signal: ctrl.signal
           });
-          return !events.includes(ymd); // events = ["YYYY-MM-DD"]
+
+          clearTimeout(t);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          const obj = await r.json();
+          console.log(obj);
+          const dates = Object.keys(obj).sort();
+
+          // Hydrate aussi localStorage (compat avec ton code existant)
+          localStorage.setItem('dispo', JSON.stringify(obj));
+          localStorage.setItem('dates', JSON.stringify(dates));
+
+          return { dispo: obj, events: dates };
         } catch (e) {
-          throw new Error('Erreur dans le traitement des jours non disponibles : ' + e.message);
-        }
-      },
-      // Quand une date est sélectionnée
-      onSelect: function (date) {
-        try {
-          selected.date = date.toDateString();
+          console.warn('get-dispos failed', e);
 
-          const key = date.toLocaleDateString('en-CA', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
-
-          const list = document.getElementById('slots');
-          list.innerHTML = '';
-          document.getElementById('heure-loader').style.display = 'inline-block';
-
-          const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
-          heures.forEach(heure => {
-            const li = document.createElement('li');
-            li.innerText = heure;
-            li.addEventListener('click', () => {
-              document.querySelectorAll('#slots li').forEach(el => el.classList.remove('selected'));
-              li.classList.add('selected');
-              slot = heure;
-              selected.heure = heure;
-            });
-            list.appendChild(li);
-          });
-
-          document.getElementById('heure-loader').style.display = 'none';
-          document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
-        } catch (error) {
-          throw new Error('Erreur dans l\'affichage des heures disponibles : ' + error.message);
+          // Fallbacks: LS puis /dispo.json statique
+          const ls = localStorage.getItem('dispo');
+          if (ls) {
+            const obj = JSON.parse(ls);
+            return { dispo: obj, events: Object.keys(obj).sort() };
+          }
+          
+          return { dispo: {}, events: [] };
         }
       }
-    });
 
-    // Optionnel : forcer l’ouverture immédiate si l’input était caché
-    picker.show();
+      // ✅ Déstructuration + assignation aux variables déjà déclarées
+      ({ dispo, events } = await loadDispos());
 
-    // 6) Soumission du formulaire
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      document.getElementById('slot-conf').style.display = 'none';
+      // -------- 2) UI / Form / Pikaday --------
+      const form = document.querySelector('form');
 
-      if (!slot) {
-        document.getElementById('slot-conf').style.display = 'inline-block';
-        return;
-      }
-
-      try {
-        selected.group = document.getElementById('group').value.trim();
-        selected.prenom = document.getElementById('res-prenom').value.trim();
-        selected.nom = document.getElementById('res-nom').value.trim();
-        selected.name = selected.prenom + ' ' + selected.nom;
-        selected.email = document.getElementById('email').value.trim();
-        selected.phone_number = document.getElementById('phone').value.trim();
-      } catch (e) {
-        throw new Error('Erreur lors de la récupération des données du client : ' + e.message);
-      }
-
-      form.style.display = 'none';
-
-      const card = document.getElementById('card');
-
-      const div = document.createElement('div');
-      div.className = 'paiement';
-
-      const title = document.createElement('h2');
-      title.innerText = 'Payment method';
-
-      const select = document.createElement('select');
-      select.id = 'paiement';
-
-      const online = document.createElement('option');
-      online.value = 'online';
-      online.innerText = 'Online invoice';
-
-      const surplace = document.createElement('option');
-      surplace.value = 'surplace';
-      surplace.innerText = 'Pay on site';
-
-      const buttonPayer = document.createElement('button');
-      buttonPayer.id = 'payer';
-      buttonPayer.type = 'button';
-      buttonPayer.innerText = 'Confirm';
-
-      const annuler = document.createElement('button');
-      annuler.type = 'button';
-      annuler.innerText = 'Back';
-      annuler.addEventListener('click', function () {
-        card.removeChild(div);
-        form.style.display = 'inline-block';
+      document.getElementById('close').addEventListener('click', function (e) {
+        e.preventDefault();
+        form.reset();
+        window.location.href = 'index.html';
       });
 
-      select.appendChild(online);
-      select.appendChild(surplace);
-      div.appendChild(title);
-      div.appendChild(select);
-      div.appendChild(buttonPayer);
-      div.appendChild(annuler);
-      card.appendChild(div);
+      const participants_select = document.getElementById('participants');
+      for (let i = 10; i <= 50; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        participants_select.appendChild(option);
+      }
+      participants_select.addEventListener('change', function () {
+        selected.participants = Number(this.value);
+      });
 
-      document.getElementById('payer').addEventListener('click', function () {
-        const option = document.getElementById('paiement').value;
+      function open() {
+        document.getElementById('datepicker').style.display = 'inline-block';
+      }
+
+      function invoice() {
+        const url = 'https://script.google.com/macros/s/AKfycbxcwI0QRWiw36FeLWMC8li3_9bCBk7ygF8MUmTV3cVjVAfVrUgIunbATDPpAHEoC9Ul/exec';
+        const body = new URLSearchParams(selected);
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+      }
+
+      function sendEmail() {
+        const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
+        const body = new URLSearchParams(selected);
+        return fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+      }
+
+      picker = new Pikaday({
+        field: document.getElementById('datepicker'),
+        format: 'YYYY-MM-DD',
+        i18n: {
+          months: [
+            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+          ],
+          weekdays: [
+            'Dimanche', 'Lundi', 'Mardi', 'Mercredi',
+            'Jeudi', 'Vendredi', 'Samedi'
+          ],
+          weekdaysShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+        },
+        onOpen: open,
+        disableDayFn: function (date) {
+          try {
+            const ymd = date.toLocaleDateString('en-CA', {
+              timeZone: 'America/Toronto',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            });
+            return !events.includes(ymd);
+          } catch (e) {
+            throw new Error('Erreur disableDayFn : ' + e.message);
+          }
+        },
+        onSelect: function (date) {
+          try {
+            selected.date = date.toDateString();
+
+            const key = date.toLocaleDateString('en-CA', {
+              timeZone: 'America/Toronto',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            });
+
+            const list = document.getElementById('slots');
+            list.innerHTML = '';
+
+            const heures = Array.isArray(dispo[key]) ? dispo[key] : [];
+            heures.forEach(heure => {
+              const li = document.createElement('li');
+              li.innerText = heure;
+              li.addEventListener('click', () => {
+                document.querySelectorAll('#slots li').forEach(el => el.classList.remove('selected'));
+                li.classList.add('selected');
+                slot = heure;
+                selected.heure = heure;
+              });
+              list.appendChild(li);
+            });
+
+            document.getElementById('heures').style.display = heures.length ? 'inline-block' : 'none';
+          } catch (error) {
+            throw new Error('Erreur affichage heures : ' + error.message);
+          }
+        }
+      });
+
+/*       picker.show(); */
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        document.getElementById('slot-conf').style.display = 'none';
+
+        if (!slot) {
+          document.getElementById('slot-conf').style.display = 'inline-block';
+          return;
+        }
+
+        try {
+          selected.group = document.getElementById('group').value.trim();
+          selected.prenom = document.getElementById('res-prenom').value.trim();
+          selected.nom = document.getElementById('res-nom').value.trim();
+          selected.name = selected.prenom + ' ' + selected.nom;
+          selected.email = document.getElementById('email').value.trim();
+          selected.phone_number = document.getElementById('phone').value.trim();
+        } catch (e) {
+          throw new Error('Erreur collecte client : ' + e.message);
+        }
+
+        form.style.display = 'none';
+
         const card = document.getElementById('card');
 
-        card.innerHTML = '<p>Traitement de votre requête...</p>';
-        selected.status = (option === 'online') ? 'Facture square' : 'Paiement sur place';
+        const div = document.createElement('div');
+        div.className = 'paiement';
 
-        selected.action = 'confirmationEN';
-        const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+        const title = document.createElement('h2');
+        title.innerText = 'Payment method';
 
-        Promise.resolve(p1)
-          .then(() => {
-            selected.action = 'direction';
-            return sendEmail();
-          })
-          .then(() => {
-            card.innerHTML = '<p>Success! You will recieve the reservation detials sholrtly. You can safely leave this page.</p>';
-          })
-          .catch(() => {
-            card.innerHTML = '<p>An error happend during the treatement. Please try again later.</p>';
-          });
+        const select = document.createElement('select');
+        select.id = 'paiement';
+
+        const online = document.createElement('option');
+        online.value = 'online';
+        online.innerText = 'Square invoice';
+
+        const surplace = document.createElement('option');
+        surplace.value = 'surplace';
+        surplace.innerText = 'Pay on site';
+
+        const buttonPayer = document.createElement('button');
+        buttonPayer.id = 'payer';
+        buttonPayer.type = 'button';
+        buttonPayer.innerText = 'Confirm';
+
+        const annuler = document.createElement('button');
+        annuler.type = 'button';
+        annuler.innerText = 'Back';
+        annuler.addEventListener('click', function () {
+          card.removeChild(div);
+          form.style.display = 'inline-block';
+        });
+
+        select.appendChild(online);
+        select.appendChild(surplace);
+        div.appendChild(title);
+        div.appendChild(select);
+        div.appendChild(buttonPayer);
+        div.appendChild(annuler);
+        card.appendChild(div);
+
+        document.getElementById('payer').addEventListener('click', function () {
+          const option = document.getElementById('paiement').value;
+          const card = document.getElementById('card');
+
+          card.innerHTML = '<p>Loading your request...</p>';
+          selected.status = (option === 'online') ? 'Square invoice' : 'Pay on site';
+
+          selected.action = 'confirmationEN';
+          const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+
+          Promise.resolve(p1)
+            .then(() => {
+              selected.action = 'direction';
+              return sendEmail();
+            })
+            .then(() => {
+              card.innerHTML = '<p>Success! Details will be sent out to you by email shortly. You can safely leave this page.</p>';
+            })
+            .catch(() => {
+              card.innerHTML = '<p>An error occured during the process. Please try again later</p>';
+            });
+        });
       });
-    });
 
-  } catch (error) {
-    error_stack.push({ error: error.message, stack: error.stack });
-  } finally {
-    const url = 'https://script.google.com/macros/s/AKfycbyLAOgf3ZZq3soaytD0CW9T44gNqElFGlyXFuXUNqRtBjOLFwXmGmiGIlY_XOcw1Eb0/exec';
-    const body = new URLSearchParams(JSON.stringify(error_stack));
-
-    fetch(url, {
-      method : 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // format www-form
-      },
-      body : body
-    });
-  }
+    } catch (error) {
+      error_stack.push({ error: error.message, stack: error.stack });
+      console.error(error_stack);
+    } finally {
+    }
+  })();
 </script>
+
 </body>
 </html>
