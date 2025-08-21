@@ -246,6 +246,7 @@
       async function loadDispos() {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 8000);
+
         try {
           const r = await fetch('https://zip-calendar-widget.netlify.app/.netlify/functions/get-dispos', {
             method : 'GET',
@@ -255,6 +256,7 @@
             cache: 'no-store',
             signal: ctrl.signal
           });
+
           clearTimeout(t);
           if (!r.ok) throw new Error('HTTP ' + r.status);
           const obj = await r.json();
@@ -275,16 +277,7 @@
             const obj = JSON.parse(ls);
             return { dispo: obj, events: Object.keys(obj).sort() };
           }
-          /* try {
-            const r2 = await fetch('/dispo.json', { cache: 'no-store' });
-            if (r2.ok) {
-              const obj = await r2.json();
-              const dates = Object.keys(obj).sort();
-              localStorage.setItem('dispo', JSON.stringify(obj));
-              localStorage.setItem('dates', JSON.stringify(dates));
-              return { dispo: obj, events: dates };
-            }
-          } catch {} */
+          
           return { dispo: {}, events: [] };
         }
       }
@@ -390,7 +383,7 @@
         }
       });
 
-      picker.show();
+/*       picker.show(); */
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
