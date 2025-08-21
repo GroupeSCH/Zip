@@ -14,10 +14,7 @@ export default async function handler(req, context) {
     const dispos = await res.json();
 
     // Enregistrement dans le store Netlify
-    await store.set("dispo.json", {
-      value: JSON.stringify(dispos),
-      contentType: "application/json"
-    });
+    await store.set("dispo.json", JSON.stringify(dispos));
 
     // Réponse correcte pour Netlify
     return new Response(
