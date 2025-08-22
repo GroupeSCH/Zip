@@ -199,6 +199,21 @@
         </div>
       </div>
 
+      <div>
+        <p>Choix du parcours</p>
+        <div style="border:1px solid black; border-radius:8px; width:80%; margin:auto">
+          <label>
+            <input type="radio" name="parcours" value="9" style="width:auto" checked>
+            Parcours 9 trous
+          </label>
+          <label>
+            <input type="radio" name="parcours" value="18" style="width:auto">
+            Parcours 18 trous
+          </label>
+        </div>
+        
+      </div>
+
       <h3>Informations du reponsable</h3>
       <div id="responsable">
         <div class="form-info">
@@ -227,7 +242,6 @@
     </form>
   </div>
   
-
 <script>
   // Portée globale (utilisé partout ensuite)
   let events = [];
@@ -318,12 +332,22 @@
       }
 
       function sendEmail() {
-        const url = 'https://script.google.com/macros/s/AKfycbwQn8mGDXSWUoFti2-GP-bA83UTiz-V9IY5IOApXDOkihQcEjDi-q3u1PJ91iNuEtdm9Q/exec';
+        const url = 'https://script.google.com/macros/s/AKfycbzX_Blgr8q6L7K7H1mSRjacztQfRBnecUIs2-TUcMdk4SPQE42fer29Jh4H-Bgn1fcxDw/exec';
         const body = new URLSearchParams(selected);
         return fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body.toString()
+        });
+      }
+
+      function updateDispo() {
+        const url = 'https://script.google.com/macros/s/AKfycbzlnJvSYcleBQ_l2z5vUSmksQTtVE0kxYLUwMQ_N1avWEezKWwBeGsiOc579qOlMj5cGg/exec';
+        const body = new URLSearchParams(selected);
+        return fetch(url, {
+          method : 'POST',
+          headers : { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body : body.toString()
         });
       }
 
@@ -388,8 +412,6 @@
           }
         }
       });
-
-/*       picker.show(); */
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -462,6 +484,7 @@
 
           selected.action = 'confirmationFR';
           const p1 = (option === 'online') ? invoice().then(() => sendEmail()) : sendEmail();
+          p1.then(() => updateDispo());
 
           Promise.resolve(p1)
             .then(() => {
@@ -483,6 +506,8 @@
     } finally {
     }
   })();
+
+  
 </script>
 
 
